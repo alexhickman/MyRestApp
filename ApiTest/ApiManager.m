@@ -57,23 +57,54 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
 }
 
 #pragma mark CHALLENGE #1 - let's do this together with a projector
-- (void)registerNewUsername:(NSString *)username withPassword:(NSString *)password completion:(void (^)(NSString *))completion failure:(void (^)(void))failure {
-    
-    NSURLSession *urlSession = [NSURLSession sharedSession];
-    NSURL *url = [NSURL URLWithString:@"http://104.236.231.254:5000/user"];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-    request.HTTPMethod = @"POST";
+
+//This method takes the Username and Password passed to it and attempts to register a new user on a remote server
+//If successful, it executes the completion block of the method call with an authToken
+//If failure, it executes the failure block of the method call
+
+- (void)registerNewUsername:(NSString *)username
+               withPassword:(NSString *)password
+                 completion:(void (^)(NSString *))completion
+                    failure:(void (^)(void))failure
+{
+    //store username and password into a new NSMutabledictionary
     NSMutableDictionary *userDataDictionary = [[NSMutableDictionary alloc]init];
     [userDataDictionary setObject:username forKey:@"username"];
     [userDataDictionary setObject:password forKey:@"password"];
     
     NSError *error;
+    //turn dictionary into a JSON object
     NSData *dataToPass = [NSJSONSerialization dataWithJSONObject:userDataDictionary options:0 error:&error];
+    //if error bail
+    if (error)
+    {
+        failure();
+        return;
+    }
+    
+    // set the url as specified in API documentation
+    NSURL *url = [NSURL URLWithString:@"http://104.236.231.254:5000/user"];
+    
+    // create a request to interact with server
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    
+    // set the HTTPMethod as specified in API documentation: POST = push/create
+    request.HTTPMethod = @"POST";
+    
+    // set the HTTPBody as specified in API documentation: JSON object from above
     request.HTTPBody = dataToPass;
     
+    // set the header as specified in API documentation
     [request addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
     
+    // prepare to interact with server/API
+    NSURLSession *urlSession = [NSURLSession sharedSession];
+
+    // prepare what you want the server to do and how to react
     NSURLSessionDataTask *dataTask = [urlSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        
+        // Error/Success code server with give you: (long)((NSHTTPURLResponse *)response).statusCode)
+        
         if (!error) {
             NSLog(@"There was no error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
             if ( ((NSHTTPURLResponse *)response).statusCode == 200 ) {
@@ -93,6 +124,7 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
         }
     }];
     
+    // Attempt to connect to server
     [dataTask resume];
 }
 
