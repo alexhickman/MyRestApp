@@ -78,6 +78,7 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
             NSLog(@"There was no error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
             if ( ((NSHTTPURLResponse *)response).statusCode == 200 ) {
                 NSString *authToken = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                self.authToken = authToken;
                 completion(authToken);
             }
             else
