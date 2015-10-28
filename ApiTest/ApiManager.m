@@ -124,6 +124,7 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
         }
     }];
     
+    
     // Attempt to connect to server
     [dataTask resume];
 }
