@@ -7,37 +7,27 @@
 //
 
 #import "ApiManager.h"
+#import "Constants.h"
 
-NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
 
 @interface ApiManager ()
 
-@property (readonly, strong, nonatomic) NSString *serverBase;
 @property (strong, nonatomic) NSString *authToken;
 
 @end
 
 @implementation ApiManager
 
-+(instancetype)getInstance {
-    // the 'static' keyword causes this line to only be executed once, ever.
-    static ApiManager *instance = nil;
-    
-    // what is this doing?
-    if (!instance) {
-        NSLog(@"initializing ApiManager");
-        instance = [[ApiManager alloc] initWithServerBase:SERVER_API_BASE_URL];
-    }
-    
-    return instance;
-}
+static ApiManager *sMyApi;
 
-- (instancetype)initWithServerBase:(NSString *)serverBase {
-    self = [self init];
++ (ApiManager *)sharedManager
+{
+    static dispatch_once_t tokenToRunOnlyOnce;
     
-    _serverBase = serverBase;
-    
-    return self;
+    dispatch_once(&tokenToRunOnlyOnce, ^{
+        sMyApi = [[ApiManager alloc]init];
+    });
+    return sMyApi;
 }
 
 /**
@@ -53,7 +43,7 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
     pathFormat = [[NSString alloc] initWithFormat:pathFormat arguments:args];
     va_end(args);
     
-    return [NSString stringWithFormat:@"%@%@", self.serverBase, pathFormat];
+    return [NSString stringWithFormat:@"%@%@", kserverBase, pathFormat];
 }
 
 #pragma mark CHALLENGE #1 - let's do this together with a projector
@@ -83,46 +73,31 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
     }
     
     // set the url as specified in API documentation
-    NSURL *url = [NSURL URLWithString:@"http://104.236.231.254:5000/user"];
+    NSURL *url = [NSURL URLWithString: [NSString stringWithFormat:@"%@/user", kserverBase]];
     
     // create a request to interact with server
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-    
-    // set the HTTPMethod as specified in API documentation: POST = push/create
-    request.HTTPMethod = @"POST";
-    
-    // set the HTTPBody as specified in API documentation: JSON object from above
-    request.HTTPBody = dataToPass;
-    
-    // set the header as specified in API documentation
-    [request addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    NSMutableURLRequest *request = [self setupRequest:YES withURL:url andData:dataToPass];
     
     // prepare to interact with server/API
     NSURLSession *urlSession = [NSURLSession sharedSession];
 
     // prepare what you want the server to do and how to react
+    
     NSURLSessionDataTask *dataTask = [urlSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         
-        // Error/Success code server with give you: (long)((NSHTTPURLResponse *)response).statusCode)
-        
-        if (!error) {
-            if ( ((NSHTTPURLResponse *)response).statusCode == 200 ) {
-                NSString *authToken = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-                self.authToken = authToken;
-                completion(authToken);
-            }
-            else
-            {
-                failure();
-            }
+        if ([self dealWithError:error andResponse:response andData:data] == false)
+        {
+            failure();
         }
         else
         {
-            NSLog(@"There was an error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
-            failure();
+            NSString *authToken = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            self.authToken = authToken;
+
+            completion(authToken);
+            return;
         }
     }];
-    
     
     // Attempt to connect to server
     [dataTask resume];
@@ -136,89 +111,49 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
     [userDataDictionary setObject:username forKey:@"username"];
     [userDataDictionary setObject:password forKey:@"password"];
     
-    // set the url as specified in API documentation
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://104.236.231.254:5000/auth?username=%@&password=%@", username, password]];
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@%@&password=%@", kserverBase, kauthenticateUser, username, password]];
     
-    // create a request to interact with server
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    NSMutableURLRequest *request = [self setupRequest:YES withURL:url andData:nil];
     
-    // set the HTTPMethod as specified in API documentation: POST = push/create
-    request.HTTPMethod = @"POST";
-    
-    // set the header as specified in API documentation
-    [request addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-    
-    // prepare to interact with server/API
-    NSURLSession *urlSession = [NSURLSession sharedSession];
-    
-    // prepare what you want the server to do and how to react
-    NSURLSessionDataTask *dataTask = [urlSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+    NSURLSessionDataTask *dataTask = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         
-        // Error/Success code server with give you: (long)((NSHTTPURLResponse *)response).statusCode)
-        
-        if (!error) {
-            NSLog(@"There was no error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
-            if ( ((NSHTTPURLResponse *)response).statusCode == 200 ) {
-                NSString *authToken = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-                self.authToken = authToken;
-                completion(authToken);
-            }
-            else
-            {
-                failure();
-            }
+        if ([self dealWithError:error andResponse:response andData:data] == false)
+        {
+            failure();
         }
         else
         {
-            NSLog(@"There was an error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
-            failure();
+            NSString *authToken = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            self.authToken = authToken;
+            completion(self.authToken);
         }
     }];
     
-    // Attempt to connect to server
     [dataTask resume];
-    
 }
 
 #pragma mark CHALLENGE #3 - with a partner or on your own
 - (void)fetchAllUserDataWithCompletion:(void (^)(NSArray<User *> *))completion failure:(void (^)(void))failure {
     // set the url as specified in API documentation
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@%@", kserverBase, kfetchData, self.authToken]];
     
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://104.236.231.254:5000/user?auth=%@", self.authToken]];
+    NSMutableURLRequest *request = [self setupRequest:NO withURL:url andData:nil];
     
-    // create a request to interact with server
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-    
-    // set the HTTPMethod as specified in API documentation: POST = push/create
-    request.HTTPMethod = @"GET";
-    
-    // prepare to interact with server/API
     NSURLSession *urlSession = [NSURLSession sharedSession];
     
-    // prepare what you want the server to do and how to react
     NSURLSessionDataTask *dataTask = [urlSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         
-        // Error/Success code server with give you: (long)((NSHTTPURLResponse *)response).statusCode)
-        
-        if (!error) {
-            NSLog(@"There was no error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
-            if ( ((NSHTTPURLResponse *)response).statusCode == 200 ) {
-                NSArray *userArray = [User usersFromData:data];
-                completion(userArray);
-            }
-            else
-            {
-                failure();
-            }
+        if ([self dealWithError:error andResponse:response andData:data] == false)
+        {
+            failure();
         }
         else
         {
-            NSLog(@"There was an error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
-            failure();
+            NSArray *userArray = [User usersFromData:data];
+            completion(userArray);
         }
     }];
     
-    // Attempt to connect to server
     [dataTask resume];
 }
 
@@ -233,7 +168,6 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
     [userDataDictionary setObject:device.appVersion forKey:@"app_version"];
     
     NSError *error;
-    //turn dictionary into a JSON object
     NSData *dataToPass = [NSJSONSerialization dataWithJSONObject:userDataDictionary options:0 error:&error];
     //if error bail
     if (error)
@@ -242,75 +176,76 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
         return;
     }
     
-    // set the url as specified in API documentation
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://104.236.231.254:5000/device?auth=%@", self.authToken]];
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@%@", kserverBase, ksaveServer, self.authToken]];
     
-    // create a request to interact with server
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    NSMutableURLRequest *request = [self setupRequest:YES withURL:url andData:dataToPass];
     
-    // set the HTTPMethod as specified in API documentation: POST = push/create
-    request.HTTPMethod = @"POST";
-    
-    // set the HTTPBody as specified in API documentation: JSON object from above
-    request.HTTPBody = dataToPass;
-    
-    // set the header as specified in API documentation
-    [request addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-    
-    // prepare to interact with server/API
     NSURLSession *urlSession = [NSURLSession sharedSession];
     
-    // prepare what you want the server to do and how to react
     NSURLSessionDataTask *dataTask = [urlSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         
-        // Error/Success code server with give you: (long)((NSHTTPURLResponse *)response).statusCode)
-        
-        if (!error) {
-            if ( ((NSHTTPURLResponse *)response).statusCode == 200 ) {
-                completion();
-                return;
-            }
-            else
-            {
-                failure();
-            }
+        if ([self dealWithError:error andResponse:response andData:data] == false)
+        {
+            failure();
         }
         else
         {
-            NSLog(@"There was an error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
-            failure();
+            completion();
+            return;
         }
+
     }];
-    
-    
-    // Attempt to connect to server
+
     [dataTask resume];
 
+}
+
+- (BOOL)dealWithError:(NSError *)error andResponse:(NSURLResponse *)response andData:(NSData *)data
+{
+    // Error/Success code server with give you: (long)((NSHTTPURLResponse *)response).statusCode)
+    if (!error)
+    {
+        NSLog(@"There was no error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
+        if ( ((NSHTTPURLResponse *)response).statusCode == 200 ) {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        NSLog(@"There was an error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
+        return false;
+    }
+}
+
+-(NSMutableURLRequest *)setupRequest:(BOOL)isPOST withURL:(NSURL *)url andData:(NSData *)dataToPass
+{
+    // create a request to interact with server
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    
+    if (isPOST) {
+        // set the HTTPMethod as specified in API documentation: POST = push/create, default = GET
+        request.HTTPMethod = @"POST";
+        
+        // set the HTTPBody as specified in API documentation: JSON object from above
+        request.HTTPBody = dataToPass;
+        
+        // set the header as specified in API documentation
+        [request addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    }
+    return request;
 }
 
 -(BOOL)isAuthenticated {
     return self.authToken;
 }
 
-/**
- * BONUS CHALLENGES...
- *
- * Below here you'll find methods that will flesh out this API Manager
- * even more. Pick and choose which you're interested in and ask for help...
- * Heads up! These have actually not been implemented as any prep for this
- * exercise, so you're probably the first one doing these!
- */
-
 -(void)logout {
     self.authToken = @"";
-    self.isAuthenticated = false;    
-    // what should this method do?
-    
-    // How do we DELETE an auth token from the API?
-    
-    // What if ApiManager simply 'forgets' its auth token?
-    
-    // What do you think this method should really do?
+    self.isAuthenticated = false;
 }
 
 @end

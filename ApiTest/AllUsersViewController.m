@@ -26,7 +26,7 @@
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     
-    ApiManager *api = [ApiManager getInstance];
+    ApiManager *api = [ApiManager sharedManager];
     
     if ([self checkLoggedIn]) {
         [api fetchAllUserDataWithCompletion:^(NSArray<User *> *userData){
@@ -44,7 +44,7 @@
 }
 
 - (BOOL)checkLoggedIn {
-    if (![ApiManager getInstance].isAuthenticated) {
+    if (![ApiManager sharedManager].isAuthenticated) {
         [self performSegueWithIdentifier:@"authenticate" sender:self];
         return NO;
     }
@@ -84,8 +84,7 @@
 }
 
 - (IBAction)logoutPressed:(id)sender {
-    [[ApiManager getInstance] logout];
-    //    [self checkLoggedIn];
+    [[ApiManager sharedManager] logout];
     [self performSegueWithIdentifier:@"authenticate" sender:self];
 }
 

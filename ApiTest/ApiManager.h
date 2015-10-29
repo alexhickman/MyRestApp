@@ -13,7 +13,7 @@
 
 @property (nonatomic) BOOL isAuthenticated;
 
-+ (instancetype)getInstance;
++ (ApiManager *)sharedManager;
 
 - (void)authenticateUser:(NSString *)username withPassword:(NSString *)password completion:(void (^)(NSString *))completion failure:(void (^)(void))failure;
 

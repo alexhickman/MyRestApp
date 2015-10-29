@@ -22,7 +22,7 @@
 
 - (IBAction)buttonPressedRegister:(id)sender {
     
-    [[ApiManager getInstance] registerNewUsername:self.textFieldUsername.text withPassword:self.textFieldPassword.text completion:^(NSString *authToken) {
+    [[ApiManager sharedManager] registerNewUsername:self.textFieldUsername.text withPassword:self.textFieldPassword.text completion:^(NSString *authToken) {
         NSLog(@"Created new user, got auth token: %@", authToken);
         dispatch_async(dispatch_get_main_queue(), ^{
             [self performSegueWithIdentifier:@"unwindWithAuthToken" sender:self];

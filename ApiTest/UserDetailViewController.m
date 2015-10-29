@@ -47,7 +47,6 @@
     [self setupTextField:self.textFieldLanguage withText:device.language editable:YES];
     [self setupTextField:self.textFieldAppVersion withText:device.appVersion editable:YES];
     
-    
 }
 - (IBAction)buttonSaveDevicePressed:(id)sender {
     
@@ -56,7 +55,7 @@
                                      withLanguage:self.textFieldLanguage.text
                                    withAppVersion:self.textFieldAppVersion.text];
     
-    [[ApiManager getInstance] saveDevice:device forUser:self.user completion:^{
+    [[ApiManager sharedManager] saveDevice:device forUser:self.user completion:^{
         self.labelStatusMessage.textColor = [UIColor blueColor];
         self.labelStatusMessage.text = @"Device Saved!";
         self.labelStatusMessage.hidden = NO;

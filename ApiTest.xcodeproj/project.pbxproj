@@ -21,6 +21,7 @@
 		8164B3EA1BD6F8C900D312E3 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8164B3E81BD6F8C900D312E3 /* LaunchScreen.storyboard */; };
 		8164B3F51BD6F8C900D312E3 /* ApiTestTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 8164B3F41BD6F8C900D312E3 /* ApiTestTests.m */; };
 		8164B4001BD6F8C900D312E3 /* ApiTestUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 8164B3FF1BD6F8C900D312E3 /* ApiTestUITests.m */; };
+		8821D05E1BE2A4BD009C0E17 /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = 8821D05D1BE2A4BD009C0E17 /* Constants.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,6 +70,8 @@
 		8164B3FB1BD6F8C900D312E3 /* ApiTestUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ApiTestUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8164B3FF1BD6F8C900D312E3 /* ApiTestUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ApiTestUITests.m; sourceTree = "<group>"; };
 		8164B4011BD6F8C900D312E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8821D05C1BE2A4BD009C0E17 /* Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		8821D05D1BE2A4BD009C0E17 /* Constants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Constants.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +104,8 @@
 			children = (
 				8116BB3D1BDA9941000C267B /* ApiManager.h */,
 				8116BB3E1BDA9941000C267B /* ApiManager.m */,
+				8821D05C1BE2A4BD009C0E17 /* Constants.h */,
+				8821D05D1BE2A4BD009C0E17 /* Constants.m */,
 			);
 			name = api;
 			sourceTree = "<group>";
@@ -329,6 +334,7 @@
 				8164B3DF1BD6F8C900D312E3 /* AppDelegate.m in Sources */,
 				8116BB4A1BDACFFB000C267B /* Device.m in Sources */,
 				8116BB3F1BDA9941000C267B /* ApiManager.m in Sources */,
+				8821D05E1BE2A4BD009C0E17 /* Constants.m in Sources */,
 				8116BB3C1BDA982D000C267B /* AllUsersViewController.m in Sources */,
 				8116BB361BD9AF98000C267B /* RegisterUserViewController.m in Sources */,
 				8116BB4D1BDAD67F000C267B /* UserDetailViewController.m in Sources */,

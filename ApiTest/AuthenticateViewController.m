@@ -27,7 +27,7 @@
 
 - (IBAction)buttonCreateUserPressed:(id)sender {
     
-    [[ApiManager getInstance] authenticateUser:self.textFieldUsername.text withPassword:self.textFieldPassword.text completion:^(NSString *authToken){
+    [[ApiManager sharedManager] authenticateUser:self.textFieldUsername.text withPassword:self.textFieldPassword.text completion:^(NSString *authToken){
         
         NSLog(@"created auth token: %@", authToken);
         dispatch_async(dispatch_get_main_queue(), ^{
