@@ -85,7 +85,8 @@
 
 - (IBAction)logoutPressed:(id)sender {
     [[ApiManager getInstance] logout];
-    [self checkLoggedIn];
+    //    [self checkLoggedIn];
+    [self performSegueWithIdentifier:@"authenticate" sender:self];
 }
 
 - (IBAction)prepareForUnwind:(UIStoryboardSegue *)segue {

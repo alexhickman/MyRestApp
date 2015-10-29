@@ -224,7 +224,68 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
 
 #pragma mark CHALLENGE #4 - with a partner or on your own
 -(void)saveDevice:(Device *)device forUser:(User *)user completion:(void (^)(void))completion failure:(void (^)(void))failure {
+
+    //store username and password into a new NSMutabledictionary
+    NSMutableDictionary *userDataDictionary = [[NSMutableDictionary alloc]init];
+    [userDataDictionary setObject:device.deviceType forKey:@"device_type"];
+    [userDataDictionary setObject:device.iosVersion forKey:@"ios_version"];
+    [userDataDictionary setObject:device.language forKey:@"language"];
+    [userDataDictionary setObject:device.appVersion forKey:@"app_version"];
     
+    NSError *error;
+    //turn dictionary into a JSON object
+    NSData *dataToPass = [NSJSONSerialization dataWithJSONObject:userDataDictionary options:0 error:&error];
+    //if error bail
+    if (error)
+    {
+        failure();
+        return;
+    }
+    
+    // set the url as specified in API documentation
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://104.236.231.254:5000/device?auth=%@", self.authToken]];
+    
+    // create a request to interact with server
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    
+    // set the HTTPMethod as specified in API documentation: POST = push/create
+    request.HTTPMethod = @"POST";
+    
+    // set the HTTPBody as specified in API documentation: JSON object from above
+    request.HTTPBody = dataToPass;
+    
+    // set the header as specified in API documentation
+    [request addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    
+    // prepare to interact with server/API
+    NSURLSession *urlSession = [NSURLSession sharedSession];
+    
+    // prepare what you want the server to do and how to react
+    NSURLSessionDataTask *dataTask = [urlSession dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        
+        // Error/Success code server with give you: (long)((NSHTTPURLResponse *)response).statusCode)
+        
+        if (!error) {
+            if ( ((NSHTTPURLResponse *)response).statusCode == 200 ) {
+                completion();
+                return;
+            }
+            else
+            {
+                failure();
+            }
+        }
+        else
+        {
+            NSLog(@"There was an error: %ld", (long)((NSHTTPURLResponse *)response).statusCode);
+            failure();
+        }
+    }];
+    
+    
+    // Attempt to connect to server
+    [dataTask resume];
+
 }
 
 -(BOOL)isAuthenticated {
@@ -241,8 +302,8 @@ NSString *SERVER_API_BASE_URL = @"http://localhost:5000";
  */
 
 -(void)logout {
-    NSLog(@"Hi! Does anybody want to implement ApiManager.logout ;)");
-    
+    self.authToken = @"";
+    self.isAuthenticated = false;    
     // what should this method do?
     
     // How do we DELETE an auth token from the API?

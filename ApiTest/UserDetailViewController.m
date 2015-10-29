@@ -23,7 +23,7 @@
     Device *device = self.user.device;
     
     BOOL editable = !device;
-
+    
     [self setupTextField:self.textFieldDeviceType withText:device.deviceType editable:editable];
     [self setupTextField:self.textFieldiosVersion withText:device.iosVersion editable:editable];
     [self setupTextField:self.textFieldLanguage withText:device.language editable:editable];
@@ -52,28 +52,32 @@
 - (IBAction)buttonSaveDevicePressed:(id)sender {
     
     Device *device = [[Device alloc] initWithType:self.textFieldDeviceType.text
-                                     withIosVersion:self.textFieldiosVersion.text
+                                   withIosVersion:self.textFieldiosVersion.text
                                      withLanguage:self.textFieldLanguage.text
-                                     withAppVersion:self.textFieldAppVersion.text];
+                                   withAppVersion:self.textFieldAppVersion.text];
     
     [[ApiManager getInstance] saveDevice:device forUser:self.user completion:^{
         self.labelStatusMessage.textColor = [UIColor blueColor];
         self.labelStatusMessage.text = @"Device Saved!";
         self.labelStatusMessage.hidden = NO;
         
-        [self setupTextField:self.textFieldDeviceType withText:device.deviceType editable:NO];
-        [self setupTextField:self.textFieldiosVersion withText:device.iosVersion editable:NO];
-        [self setupTextField:self.textFieldLanguage withText:device.language editable:NO];
-        [self setupTextField:self.textFieldAppVersion withText:device.appVersion editable:NO];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self setupTextField:self.textFieldDeviceType withText:device.deviceType editable:NO];
+            [self setupTextField:self.textFieldiosVersion withText:device.iosVersion editable:NO];
+            [self setupTextField:self.textFieldLanguage withText:device.language editable:NO];
+            [self setupTextField:self.textFieldAppVersion withText:device.appVersion editable:NO];
+            
+            self.buttonPopulateDeviceInfo.hidden = YES;
+            self.buttonSaveDeviceInfo.hidden = YES;
+        });
         
-        self.buttonPopulateDeviceInfo.hidden = YES;
-        self.buttonSaveDeviceInfo.hidden = YES;
     } failure:^{
-        self.labelStatusMessage.textColor = [UIColor redColor];
-        self.labelStatusMessage.text = @"Error Saving Device";
-        self.labelStatusMessage.hidden = NO;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            self.labelStatusMessage.textColor = [UIColor redColor];
+            self.labelStatusMessage.text = @"Error Saving Device";
+            self.labelStatusMessage.hidden = NO;
+        });
     }];
 }
-
-
 @end

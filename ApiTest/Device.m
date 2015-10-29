@@ -35,9 +35,9 @@
 
 +(Device *)currentDeviceInfo {
 
-    NSLog(@"Does anybody want to implement Device.currentDeviceInfo?");
+    Device *newDevice = [[Device alloc]initWithType:@"poop" withIosVersion:@"iOS 9" withLanguage:@"English" withAppVersion:@"1.43yup"];
     
-    return nil;
+    return newDevice;
 }
 
 @end
